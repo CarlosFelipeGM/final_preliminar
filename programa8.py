@@ -11,7 +11,7 @@ def dividir(numero1, numero2):
 def capturar_datos():
     while True:
         try:
-            numero1 = int(input("Ingrese el primero número: "))
+            numero1 = int(input("Ingrese el primer número: "))
             numero2 = int(input("Ingrese el segundo número: "))
             # devuelvo los datos como una tupla
             return numero1, numero2
@@ -28,6 +28,7 @@ def capturar_operacion():
 
 # programa principal
 numero1, numero2 = capturar_datos()
+# diccionario de operaciones
 operaciones = {'S': sumar, 'R': restar, 'M': multiplicar, 'D': dividir}
 operacion = capturar_operacion()
 resultado = operaciones[operacion](numero1, numero2)

@@ -1,17 +1,7 @@
-import sqlite3
-from helper import ingresar_numero_entero
+from helper import capturar_validar_edad
+from helper import capturar_validar_estado_salud
 
 def menu():
-    """
-    Muestra el menú principal del sistema y gestiona la navegación entre opciones.
-    Opciones disponibles:
-        1 - Registrar un nuevo animal.
-        2 - Filtrar y mostrar animales con estado de salud 'ENFERMO'.
-        3 - Consultar un animal por nombre.
-        4 - Listar todos los animales registrados.
-        5 - Salir del sistema.
-    No retorna ningún valor. El bucle finaliza cuando el usuario elige la opción 5.
-    """
     while True:
         print("******************************************")
         print("BIENVENIDOS AL SISTEMA REFUGIO DE ANIMALES")
@@ -22,6 +12,8 @@ def menu():
         print("[4] Listar todos los animales registrados ...!!!")
         print("[5] Salir ...!!!")
         
+        # se puede reducir con un diccionario de opciones
+
         print()
         opcion = input("Ingrese una opción: ")
         print()
@@ -45,107 +37,74 @@ def menu():
             print("")
         elif opcion == "5":
             print("Saliendo ...!!!\n")
-            break
+            return
+            #break
         else:
             print("La opción ingresada es incorrecta ...!!!")
         
         print()
         input("\nPresione ENTER para continuar...")
             
+# simulacion de la base de datos
+animales = [
+    {
+        "nombre" : "FIRULAIS",
+        "especie" : "PERRO",
+        "edad" : 5,
+        "estado_salud" : "SANO"
+
+    },
+    {
+        "nombre" : "MICHIFUZ",
+        "especie" : "GATO",
+        "edad" : 3,
+        "estado_salud" : "ENFERMO"
+
+    },
+]
+
 
 def registrar_animal():
-    """
-    Solicita al usuario los datos de un animal y los registra en la base de datos.
-    Parámetros solicitados:
-        - nombre      : Nombre del animal (se convierte a mayúsculas).
-        - especie     : Especie del animal (se convierte a mayúsculas).
-        - edad        : Edad en años (número entero validado).
-        - estado_salud: Estado de salud del animal (se convierte a mayúsculas).
-    No retorna ningún valor.
-    """
-    conexion = sqlite3.connect("refugio.db")
-    cursor = conexion.cursor()
-    # capturamos datos
-    nombre = input("Ingrese el nombre del animal: ").upper()
-    especie = input("Ingrese la especie del animal: ").upper()
-    # edad = int(input("Ingrese la edad del animal (número entero en años): "))
-    edad = ingresar_numero_entero("Ingrese la edad del animal (número entero en años): ")
-    estado_salud = input("Ingrese el estado de salud del animal: ").upper()
-    #ejecutamos el registro
-    sql = "insert into animal (nombre, especie, edad, estado_salud) values (?, ?, ?, ?)"
-    cursor.execute(sql, (nombre, especie, edad, estado_salud))
-    conexion.commit()
-    # cerramos
-    conexion.close()
+    # capturamos y validamos datos
+    nombre = input("Ingrese el nombre del animal: ").strip().upper()
+    especie = input("Ingrese la especie del animal: ").strip().upper()
+    edad = capturar_validar_edad()
+    estado_salud = capturar_validar_estado_salud()
+    #formamos y ejecutamos el registro
+    animal = {
+        "nombre": nombre,
+        "especie": especie,
+        "edad": edad,
+        "estado_salud": estado_salud
+    }
+    animales.append(animal)
 
 def filtrar_animales_enfermos():
-    """
-    Consulta y muestra todos los animales con estado de salud 'ENFERMO'.
-    Los resultados se ordenan por especie y luego por nombre, ambos de forma ascendente.
-    La información se imprime en formato de tabla con las columnas:
-        CODIGO, NOMBRE, ESPECIE, EDAD, ESTADO DE SALUD.
-    No retorna ningún valor.
-    """
-    conexion = sqlite3.connect("refugio.db")
-    cursor = conexion.cursor()
-    # armamos la consulta
-    cursor.execute("select * from animal where estado_salud='ENFERMO' order by especie asc, nombre asc")
-    # cabecera
-    print("--------|-----------|-----------|--------|------------------")
-    print(" CODIGO |  NOMBRE   |  ESPECIE  |  EDAD  |  ESTADO DE SALUD ")
-    print("--------|-----------|-----------|--------|------------------")
-    # datos
-    for animales in cursor:
-        print(f"{animales[0]:^8}|{animales[1]:^11}|{animales[2]:^11}|{animales[3]:^8}|{animales[4]:^12}")
-    # cerramos
-    conexion.close()
+    hay_animales_enfermos = False
+    for animal in animales:
+        if animal['estado_salud'] == "ENFERMO":
+            print(f"Nombre: {animal['nombre']} | Especie: {animal['especie']}")
+            hay_animales_enfermos = True
+    # Por si no se encuentra ninguno
+    if not hay_animales_enfermos:
+        print("¡ No existen animales enfermos registrados !")
 
 def consultar_animal():
-    """
-    Solicita un nombre al usuario y muestra los animales que coincidan en la base de datos.
-    Parámetros solicitados:
-        - nombre: Nombre del animal a buscar (se convierte a mayúsculas).
-    La información se imprime en formato de tabla con las columnas:
-        CODIGO, NOMBRE, ESPECIE, EDAD, ESTADO DE SALUD.
-    No retorna ningún valor.
-    """
-    conexion = sqlite3.connect("refugio.db")
-    cursor = conexion.cursor()
-    nombre = input("Ingrese el nombre del animal a consultar: ").upper()
-    sql = "select * from animal where nombre=?"
-    cursor.execute(sql, (nombre,))
-    resultado = cursor.fetchall()
-    # cabecera
-    print("--------|-----------|-----------|--------|------------------")
-    print(" CODIGO |  NOMBRE   |  ESPECIE  |  EDAD  |  ESTADO DE SALUD ")
-    print("--------|-----------|-----------|--------|------------------")
-    # datos
-    for animales in resultado:
-        print(f"{animales[0]:^8}|{animales[1]:^11}|{animales[2]:^11}|{animales[3]:^8}|{animales[4]:^12}")
-    # cerramos
-    conexion.close()
+    encontrado = False
+    nombre = input("Ingrese el nombre del animal: ").upper()
+    for animal in animales:
+        if animal['nombre'] == nombre:
+            print(f"Nombre: {animal['nombre']} | Especie: {animal['especie']} | Edad: {animal['edad']} | Estado de salud: {animal['estado_salud']}")
+            encontrado = True
+    # Por si no se encuentra ninguno
+    if not encontrado:
+        print(f"¡ No existen animales registrados con el nombre: {nombre}!")
 
 def listar_animales():
-    """
-    Consulta y muestra todos los animales registrados en la base de datos.
-    La información se imprime en formato de tabla con las columnas:
-        CODIGO, NOMBRE, ESPECIE, EDAD, ESTADO DE SALUD.
-    No retorna ningún valor.
-    """
-    conexion = sqlite3.connect("refugio.db")
-    cursor = conexion.cursor()
-    # armamos la consulta
-    sql = "select * from animal"
-    cursor.execute(sql)
-    resultado = cursor.fetchall()
-    # cabecera
-    print("--------|-----------|-----------|--------|------------------")
-    print(" CODIGO |  NOMBRE   |  ESPECIE  |  EDAD  |  ESTADO DE SALUD ")
-    print("--------|-----------|-----------|--------|------------------")
-    # datos
-    for animales in resultado:
-        print(f"{animales[0]:^8}|{animales[1]:^11}|{animales[2]:^11}|{animales[3]:^8}|{animales[4]:^12}")
-    # cerramos
-    conexion.close()
+    if len(animales) == 0:
+        print("No existen animales registrados !")
+    else:
+        for animal in animales:
+            print(f"Nombre: {animal['nombre']} | Especie: {animal['especie']} | Edad: {animal['edad']} | Estado de salud: {animal['estado_salud']}")
 
 menu()
